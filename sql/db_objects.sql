@@ -98,24 +98,29 @@ SELECT 'View v_show_availability created.' AS status;
 
 -- ─────────────────────────────────────────────────────────────
 -- 3. ADDITIONAL INDEXES
---    Supplement those already in schema.sql.
+--    Plain ADD INDEX — no IF NOT EXISTS / DROP IF EXISTS needed
+--    for a fresh schema. To re-run this section manually:
+--      DROP INDEX idx_bs_show_seat        ON BookedSeats;
+--      DROP INDEX idx_payment_booking_status ON Payments;
+--      DROP INDEX idx_show_screen_status_dt  ON Shows;
+--      DROP INDEX idx_layout_screen_active   ON ScreenLayouts;
 -- ─────────────────────────────────────────────────────────────
 
 -- Speed up booked-seat lookups during seat matrix rendering
 ALTER TABLE BookedSeats
-    ADD INDEX IF NOT EXISTS idx_bs_show_seat (show_id, seat_id);
+    ADD INDEX idx_bs_show_seat (show_id, seat_id);
 
 -- Speed up payment refund lookups
 ALTER TABLE Payments
-    ADD INDEX IF NOT EXISTS idx_payment_booking_status (booking_id, status);
+    ADD INDEX idx_payment_booking_status (booking_id, status);
 
--- Composite index for show browse: theatre → datetime filter
+-- Composite index for show browse: screen → status → datetime
 ALTER TABLE Shows
-    ADD INDEX IF NOT EXISTS idx_show_screen_status_dt (screen_id, status, show_datetime);
+    ADD INDEX idx_show_screen_status_dt (screen_id, status, show_datetime);
 
 -- Speed up layout fetches by screen + active flag
 ALTER TABLE ScreenLayouts
-    ADD INDEX IF NOT EXISTS idx_layout_screen_active (screen_id, is_active);
+    ADD INDEX idx_layout_screen_active (screen_id, is_active);
 
 SELECT 'Additional indexes created.' AS status;
 
@@ -134,3 +139,4 @@ WHERE table_schema = 'bookmyseat' AND table_name = 'v_show_availability';
 SELECT show_id, movie_title, status, total_seats, booked_seats, available_seats
 FROM v_show_availability
 ORDER BY show_id;
+
